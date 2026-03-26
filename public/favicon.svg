@@ -1,0 +1,11 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="auditgram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+  </defs>
+  <path d="M50 12 L82 24 V48 C82 70 50 88 50 88 C50 88 18 70 18 48 V24 L50 12 Z" fill="url(#auditgram-gradient)" />
+  <path d="M35 58 L48 45 L58 52 L68 38" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="68" cy="38" r="5" fill="#FFFFFF" />
+</svg>

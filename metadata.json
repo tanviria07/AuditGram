@@ -1,0 +1,5 @@
+{
+  "name": "AuditGram",
+  "description": "A privacy-focused web app that analyzes Instagram ZIP files to show non-followers, fans, and mutuals.",
+  "requestFramePermissions": []
+}
