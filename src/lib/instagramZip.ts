@@ -22,11 +22,14 @@ interface InstagramDataNode {
 
 export function extractUsernames(data: unknown): Set<string> {
   const usernames = new Set<string>();
+  const stack: unknown[] = [data];
 
-  function traverse(obj: unknown) {
+  while (stack.length > 0) {
+    const obj = stack.pop();
+
     if (Array.isArray(obj)) {
-      for (const item of obj) {
-        traverse(item);
+      for (let i = obj.length - 1; i >= 0; i--) {
+        stack.push(obj[i]);
       }
     } else if (obj !== null && typeof obj === 'object') {
       const node = obj as InstagramDataNode;
@@ -38,14 +41,13 @@ export function extractUsernames(data: unknown): Set<string> {
         }
       }
       for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          traverse((obj as Record<string, unknown>)[key]);
+        if (Object.prototype.hasOwnProperty.call(obj, key) && key !== 'string_list_data') {
+          stack.push((obj as Record<string, unknown>)[key]);
         }
       }
     }
   }
 
-  traverse(data);
   return usernames;
 }
 
