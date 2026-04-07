@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import { BlobReader, ZipReader, TextWriter } from '@zip.js/zip.js';
 import { AnalysisResponse } from '../types';
 import { computeResults } from './compare';
 
@@ -52,44 +52,53 @@ export function extractUsernames(data: unknown): Set<string> {
 }
 
 export async function analyzeZipFileClientSide(file: File): Promise<AnalysisResponse> {
-  const zip = new JSZip();
+  let zipReader: ZipReader<any> | null = null;
   
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const loadedZip = await zip.loadAsync(arrayBuffer);
+    const blobReader = new BlobReader(file);
+    zipReader = new ZipReader(blobReader);
+    const entries = await zipReader.getEntries();
     
     // Check for HTML format
-    const hasHtml = Object.keys(loadedZip.files).some(name => name.endsWith('followers_1.html'));
+    const hasHtml = entries.some(entry => entry.filename.endsWith('followers_1.html'));
     if (hasHtml) {
       throw new HtmlZipError("It looks like you downloaded HTML format. Please request your data again in JSON format.");
     }
 
     // Find followers and following files
-    const followersFiles = Object.keys(loadedZip.files).filter(name => 
-      name.toLowerCase().includes('followers_') && name.toLowerCase().endsWith('.json')
+    const followersFiles = entries.filter(entry => 
+      !entry.directory && entry.filename.toLowerCase().includes('followers_') && entry.filename.toLowerCase().endsWith('.json')
     );
-    const followingFile = Object.keys(loadedZip.files).find(name => 
-      name.toLowerCase().includes('following.json')
+    const followingFiles = entries.filter(entry => 
+      !entry.directory && entry.filename.toLowerCase().includes('following') && entry.filename.toLowerCase().endsWith('.json')
     );
 
-    if (followersFiles.length === 0 || !followingFile) {
+    if (followersFiles.length === 0 || followingFiles.length === 0) {
       throw new Error("Could not find followers or following JSON files in the ZIP. Make sure you selected 'Followers and Following' when requesting data.");
     }
 
     const followers = new Set<string>();
+    const following = new Set<string>();
     
     // Parse followers files
-    for (const fileName of followersFiles) {
-      const fileData = await loadedZip.file(fileName)!.async('string');
-      const jsonData = JSON.parse(fileData);
-      const extracted = extractUsernames(jsonData);
-      extracted.forEach(username => followers.add(username));
+    for (const entry of followersFiles) {
+      if ((entry as any).getData) {
+        const fileData = await (entry as any).getData(new TextWriter());
+        const jsonData = JSON.parse(fileData);
+        const extracted = extractUsernames(jsonData);
+        extracted.forEach(username => followers.add(username));
+      }
     }
 
-    // Parse following file
-    const followingFileData = await loadedZip.file(followingFile)!.async('string');
-    const followingJsonData = JSON.parse(followingFileData);
-    const following = extractUsernames(followingJsonData);
+    // Parse following files
+    for (const entry of followingFiles) {
+      if ((entry as any).getData) {
+        const fileData = await (entry as any).getData(new TextWriter());
+        const jsonData = JSON.parse(fileData);
+        const extracted = extractUsernames(jsonData);
+        extracted.forEach(username => following.add(username));
+      }
+    }
 
     return computeResults(followers, following);
   } catch (error) {
@@ -97,6 +106,10 @@ export async function analyzeZipFileClientSide(file: File): Promise<AnalysisResp
       throw error;
     }
     throw new Error("An unexpected error occurred while processing the ZIP file.");
+  } finally {
+    if (zipReader) {
+      await zipReader.close();
+    }
   }
 }
 
