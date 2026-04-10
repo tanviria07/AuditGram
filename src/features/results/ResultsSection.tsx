@@ -16,22 +16,44 @@ export function ResultsSection({ data, onReset }: ResultsSectionProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     const text = data[activeTab].join('\n');
-    navigator.clipboard.writeText(text).catch(() => {
-      // Ignore clipboard errors
-    });
+
+    if (!text) {
+      return;
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+    } catch {
+      // Fall through to a DOM-based copy path when the Clipboard API is blocked.
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', 'true');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
   };
 
   const handleExport = () => {
-    const csvContent = 'data:text/csv;charset=utf-8,' + data[activeTab].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = ['username', ...data[activeTab]].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const encodedUri = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
     link.setAttribute('download', `${activeTab}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(encodedUri);
   };
 
   const filteredData = data[activeTab]

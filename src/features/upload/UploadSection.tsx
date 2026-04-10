@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, FileArchive, Loader2, ShieldCheck, FileJson, Type, AlertCircle, HelpCircle, ArrowRight } from 'lucide-react';
+import { FileArchive, Loader2, ShieldCheck, FileJson, Type, AlertCircle, HelpCircle, ArrowRight } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 interface UploadSectionProps {
@@ -19,12 +19,8 @@ type InputMode = 'zip' | 'json' | 'text';
 export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOpenWalkthrough, isLoading, error, errorType }: UploadSectionProps) {
   const [mode, setMode] = useState<InputMode>('zip');
   const [isHovered, setIsHovered] = useState(false);
-
-  // JSON mode state
   const [followersFile, setFollowersFile] = useState<File | null>(null);
   const [followingFile, setFollowingFile] = useState<File | null>(null);
-
-  // Text mode state
   const [followersText, setFollowersText] = useState('');
   const [followingText, setFollowingText] = useState('');
 
@@ -42,7 +38,7 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
     accept: { 'application/zip': ['.zip', '.ZIP'] },
     maxFiles: 1,
     disabled: isLoading,
-  } as any);
+  } as const);
 
   const handleJsonSubmit = () => {
     if (followersFile && followingFile) {
@@ -58,7 +54,6 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-6">
-      {/* Input Mode Switch */}
       <div className="flex p-1 bg-white/50 backdrop-blur-md rounded-2xl border border-gray-200 shadow-sm">
         <button
           onClick={() => setMode('zip')}
@@ -86,7 +81,6 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
         </button>
       </div>
 
-      {/* Helper Card */}
       <div className="bg-fuchsia-50/50 border border-fuchsia-100 rounded-2xl p-4 text-sm text-gray-600">
         <div className="flex items-center gap-2 font-medium text-fuchsia-800 mb-2">
           <HelpCircle className="w-4 h-4" /> What files AuditGram needs
@@ -95,10 +89,9 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
           <li><code className="bg-white px-1 py-0.5 rounded text-xs text-fuchsia-600">followers_and_following/followers_1.json</code></li>
           <li><code className="bg-white px-1 py-0.5 rounded text-xs text-fuchsia-600">followers_and_following/following.json</code></li>
         </ul>
-        <p className="mt-2 text-xs text-fuchsia-700/80">Tip: If your ZIP contains mostly .html files, use the Fix panel below.</p>
+        <p className="mt-2 text-xs text-fuchsia-700/80">Tip: If your ZIP contains mostly `.html` files, use the fix panel below.</p>
       </div>
 
-      {/* Upload Area */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mode}
@@ -129,7 +122,7 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-1">Upload Instagram ZIP</h3>
-                      <p className="text-gray-500 text-sm">Drag & drop or click to browse</p>
+                      <p className="text-gray-500 text-sm">Drag and drop or click to browse</p>
                     </div>
                     <Button variant="primary" size="md">Select ZIP File</Button>
                   </div>
@@ -202,7 +195,6 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
         </motion.div>
       </AnimatePresence>
 
-      {/* Error & HTML Fix Panel */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -226,11 +218,11 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                   <Button variant="outline" className="w-full justify-between bg-white hover:bg-rose-100/50 border-rose-200 text-rose-700" onClick={() => setMode('json')}>
-                    <span>I already have followers_1.json & following.json</span>
+                    <span>I already have followers_1.json and following.json</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                   <Button variant="outline" className="w-full justify-between bg-white hover:bg-rose-100/50 border-rose-200 text-rose-700" onClick={() => onOpenWalkthrough('no-json')}>
-                    <span>I can't find the JSON option</span>
+                    <span>I cannot find the JSON option</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -246,7 +238,7 @@ export function UploadSection({ onAnalyzeZip, onAnalyzeJson, onAnalyzeText, onOp
 
       <div className="flex items-center justify-center gap-2 text-gray-500 text-xs md:text-sm">
         <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-        <p>🔒 Processed locally in your browser. No data leaves your device.</p>
+        <p>Processed locally in your browser. No data leaves your device.</p>
       </div>
     </div>
   );

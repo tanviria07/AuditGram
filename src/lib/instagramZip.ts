@@ -20,6 +20,10 @@ interface InstagramDataNode {
   [key: string]: unknown;
 }
 
+function normalizeUsername(value: string): string {
+  return value.trim().replace(/^@+/, '').toLowerCase();
+}
+
 export function extractUsernames(data: unknown): Set<string> {
   const usernames = new Set<string>();
   const stack: unknown[] = [data];
@@ -36,7 +40,10 @@ export function extractUsernames(data: unknown): Set<string> {
       if (Array.isArray(node.string_list_data)) {
         for (const item of node.string_list_data) {
           if (item && typeof item === 'object' && typeof item.value === 'string') {
-            usernames.add(item.value);
+            const username = normalizeUsername(item.value);
+            if (username) {
+              usernames.add(username);
+            }
           }
         }
       }
@@ -53,24 +60,22 @@ export function extractUsernames(data: unknown): Set<string> {
 
 export async function analyzeZipFileClientSide(file: File): Promise<AnalysisResponse> {
   let zipReader: ZipReader<any> | null = null;
-  
+
   try {
     const blobReader = new BlobReader(file);
     zipReader = new ZipReader(blobReader);
     const entries = await zipReader.getEntries();
-    
-    // Check for HTML format
-    const hasHtml = entries.some(entry => entry.filename.endsWith('followers_1.html'));
+
+    const hasHtml = entries.some((entry) => entry.filename.endsWith('followers_1.html'));
     if (hasHtml) {
-      throw new HtmlZipError("It looks like you downloaded HTML format. Please request your data again in JSON format.");
+      throw new HtmlZipError('It looks like you downloaded HTML format. Please request your data again in JSON format.');
     }
 
-    // Find followers and following files
-    const followersFiles = entries.filter(entry => 
-      !entry.directory && entry.filename.toLowerCase().includes('followers_') && entry.filename.toLowerCase().endsWith('.json')
+    const followersFiles = entries.filter(
+      (entry) => !entry.directory && entry.filename.toLowerCase().includes('followers_') && entry.filename.toLowerCase().endsWith('.json')
     );
-    const followingFiles = entries.filter(entry => 
-      !entry.directory && entry.filename.toLowerCase().includes('following') && entry.filename.toLowerCase().endsWith('.json')
+    const followingFiles = entries.filter(
+      (entry) => !entry.directory && entry.filename.toLowerCase().includes('following') && entry.filename.toLowerCase().endsWith('.json')
     );
 
     if (followersFiles.length === 0 || followingFiles.length === 0) {
@@ -79,24 +84,22 @@ export async function analyzeZipFileClientSide(file: File): Promise<AnalysisResp
 
     const followers = new Set<string>();
     const following = new Set<string>();
-    
-    // Parse followers files
+
     for (const entry of followersFiles) {
       if ((entry as any).getData) {
         const fileData = await (entry as any).getData(new TextWriter());
         const jsonData = JSON.parse(fileData);
         const extracted = extractUsernames(jsonData);
-        extracted.forEach(username => followers.add(username));
+        extracted.forEach((username) => followers.add(username));
       }
     }
 
-    // Parse following files
     for (const entry of followingFiles) {
       if ((entry as any).getData) {
         const fileData = await (entry as any).getData(new TextWriter());
         const jsonData = JSON.parse(fileData);
         const extracted = extractUsernames(jsonData);
-        extracted.forEach(username => following.add(username));
+        extracted.forEach((username) => following.add(username));
       }
     }
 
@@ -105,7 +108,7 @@ export async function analyzeZipFileClientSide(file: File): Promise<AnalysisResp
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error("An unexpected error occurred while processing the ZIP file.");
+    throw new Error('An unexpected error occurred while processing the ZIP file.');
   } finally {
     if (zipReader) {
       await zipReader.close();
@@ -122,14 +125,20 @@ export async function analyzeJsonFiles(followersFile: File, followingFile: File)
     const following = extractUsernames(followingData);
 
     return computeResults(followers, following);
-  } catch (error) {
-    throw new Error("Failed to parse JSON files. Please make sure they are valid Instagram data files.");
+  } catch {
+    throw new Error('Failed to parse JSON files. Please make sure they are valid Instagram data files.');
   }
 }
 
 export function analyzePastedText(followersText: string, followingText: string): AnalysisResponse {
-  const parseLines = (text: string) => new Set(text.split('\n').map(line => line.trim().replace(/^@/, '')).filter(Boolean));
-  
+  const parseLines = (text: string) =>
+    new Set(
+      text
+        .split(/\r?\n/)
+        .map((line) => normalizeUsername(line))
+        .filter(Boolean)
+    );
+
   const followers = parseLines(followersText);
   const following = parseLines(followingText);
 

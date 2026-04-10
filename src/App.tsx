@@ -80,7 +80,6 @@ export default function App() {
 
   return (
     <div className="min-h-[100svh] flex flex-col bg-slate-50 text-gray-900 font-sans selection:bg-fuchsia-500/30 relative overflow-hidden">
-      {/* Animated Background Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 bg-slate-50">
         <motion.div
           animate={{ x: [0, 30, 0], y: [0, 40, 0] }}
@@ -163,12 +162,10 @@ export default function App() {
       </main>
 
       <footer className="w-full max-w-7xl mx-auto p-4 md:p-6 flex items-center justify-between gap-4 text-gray-500 text-xs md:text-sm shrink-0 relative z-10">
-        <p>© {new Date().getFullYear()} AuditGram. No data stored.</p>
+        <p>&copy; {new Date().getFullYear()} AuditGram. No data stored.</p>
         <div className="flex items-center gap-4">
-          <a href="#" className="hover:text-gray-800 transition-colors">
-            Privacy
-          </a>
-          <a href={GITHUB_REPO_URL} className="hover:text-gray-800 transition-colors flex items-center gap-1">
+          <span className="hover:text-gray-800 transition-colors">Privacy-first</span>
+          <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer" className="hover:text-gray-800 transition-colors flex items-center gap-1">
             <Github className="w-4 h-4" /> Source
           </a>
         </div>
